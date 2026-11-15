@@ -1,0 +1,18 @@
+{% extends 'base_admin.html' %}
+{% from '_macros.html' import form_custo %}
+{% set pagina = 'custos' %}
+{% block titulo %}Editar lançamento{% endblock %}
+
+{% block conteudo %}
+<div class="row justify-content-center">
+<div class="col-md-8 col-lg-5 col-xl-4">
+    <div class="card shadow border-0">
+        <div class="card-header"><i class="fa-solid fa-pen me-2"></i>Editar lançamento #{{ ev.id }}</div>
+        <div class="card-body p-4">
+            {{ form_custo(url_for('custo_editar', id=ev.id), ev, veiculos, tipos, '', 'Salvar alterações') }}
+            <a href="{{ url_for('custos') }}" class="btn btn-light w-100 mt-2">Cancelar</a>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,130 @@
+{# Peças reutilizáveis em todas as telas #}
+
+{% macro csrf() -%}
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{%- endmacro %}
+
+{% macro mensagens() %}
+  {% for categoria, texto in get_flashed_messages(with_categories=true) %}
+    <div class="alert alert-{{ 'info' if categoria == 'message' else categoria }} alert-dismissible fade show border-0 shadow-sm" role="alert">
+      {{ texto }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+    </div>
+  {% endfor %}
+{% endmacro %}
+
+{% macro paginacao(pag, endpoint, filtros) %}
+  {% if pag.pages > 1 %}
+  <nav class="paginacao d-flex justify-content-between align-items-center flex-wrap gap-2 p-3" aria-label="Páginas">
+    <small class="text-muted">Página {{ pag.page }} de {{ pag.pages }} · {{ pag.total }} registro(s)</small>
+    <ul class="pagination pagination-sm mb-0">
+      <li class="page-item {{ 'disabled' if not pag.has_prev }}">
+        <a class="page-link" href="{{ url_for(endpoint, pagina=pag.prev_num, **filtros) if pag.has_prev else '#' }}">&lsaquo;</a>
+      </li>
+      {% for n in pag.iter_pages(left_edge=1, left_current=1, right_current=2, right_edge=1) %}
+        {% if n %}
+          <li class="page-item {{ 'active' if n == pag.page }}"><a class="page-link" href="{{ url_for(endpoint, pagina=n, **filtros) }}">{{ n }}</a></li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+        {% endif %}
+      {% endfor %}
+      <li class="page-item {{ 'disabled' if not pag.has_next }}">
+        <a class="page-link" href="{{ url_for(endpoint, pagina=pag.next_num, **filtros) if pag.has_next else '#' }}">&rsaquo;</a>
+      </li>
+    </ul>
+  </nav>
+  {% endif %}
+{% endmacro %}
+
+{% macro vazio(texto, icone='inbox') %}
+  <div class="text-center text-muted py-5">
+    <i class="fa-solid fa-{{ icone }} fa-2x mb-2 opacity-50"></i>
+    <div>{{ texto }}</div>
+  </div>
+{% endmacro %}
+
+{# Formulário de lançamento de custos (usado em "Custos" e "Editar lançamento") #}
+{% macro form_custo(acao, ev, veiculos, tipos, agora_input, botao='Salvar lançamento') %}
+  <form method="post" action="{{ acao }}" class="form-custo">
+    {{ csrf() }}
+    <div class="mb-3">
+      <label class="form-label small fw-semibold text-secondary">VEÍCULO</label>
+      <select name="veiculo_id" class="form-select" required>
+        <option value="" disabled {{ 'selected' if not ev }}>Selecione...</option>
+        {% for v in veiculos %}
+          <option value="{{ v.id }}" {{ 'selected' if ev and ev.veiculo_id == v.id }}>{{ v.modelo }} · {{ v.placa }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="row g-2 mb-3">
+      <div class="col-6">
+        <label class="form-label small fw-semibold text-secondary">TIPO</label>
+        <select name="tipo" class="form-select tipo-evento" required>
+          {% for t in tipos %}<option value="{{ t }}" {{ 'selected' if ev and ev.tipo == t }}>{{ t }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-6">
+        <label class="form-label small fw-semibold text-secondary">VALOR (R$)</label>
+        <input type="text" inputmode="decimal" name="valor" class="form-control" placeholder="0,00"
+               value="{{ ('%.2f'|format(ev.valor)).replace('.', ',') if ev and ev.valor is not none else '' }}">
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label small fw-semibold text-secondary">DATA E HORA</label>
+      <input type="datetime-local" name="data_hora" class="form-control" required
+             value="{{ ev.data_hora.strftime('%Y-%m-%dT%H:%M') if ev else agora_input }}">
+    </div>
+    <div class="row g-2 mb-3">
+      <div class="col-6">
+        <label class="form-label small fw-semibold text-secondary">KM DO VEÍCULO</label>
+        <input type="text" inputmode="decimal" name="km" class="form-control" placeholder="Opcional"
+               value="{{ ev.km|int if ev and ev.km is not none else '' }}">
+      </div>
+      <div class="col-6 campo-tipo" data-tipos="Abastecimento">
+        <label class="form-label small fw-semibold text-secondary">LITROS</label>
+        <input type="text" inputmode="decimal" name="litros" class="form-control" placeholder="Ex: 38,5"
+               value="{{ ev.litros if ev and ev.litros is not none else '' }}">
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label small fw-semibold text-secondary campo-tipo-rotulo">POSTO / OFICINA / ÓRGÃO</label>
+      <input type="text" name="local" class="form-control" maxlength="100" value="{{ ev.local or '' if ev else '' }}">
+    </div>
+    <div class="mb-3">
+      <label class="form-label small fw-semibold text-secondary">DESCRIÇÃO</label>
+      <input type="text" name="descricao" class="form-control" maxlength="300"
+             placeholder="Ex: troca de óleo e filtros / excesso de velocidade"
+             value="{{ ev.descricao or '' if ev else '' }}">
+    </div>
+    <div class="campo-tipo" data-tipos="Manutenção">
+      <div class="mb-3">
+        <label class="form-label small fw-semibold text-secondary">PRÓXIMA REVISÃO (KM) <span class="fw-normal">- atualiza o veículo</span></label>
+        <input type="text" inputmode="decimal" name="proxima_revisao_km" class="form-control" placeholder="Ex: 40000">
+      </div>
+    </div>
+    <div class="campo-tipo" data-tipos="Multa">
+      <div class="mb-3">
+        <label class="form-label small fw-semibold text-secondary">MOTORISTA <span class="fw-normal">- se vazio, o sistema procura pela viagem</span></label>
+        <input type="text" name="motorista_nome" class="form-control" maxlength="100" value="{{ ev.motorista_nome or '' if ev else '' }}">
+      </div>
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" name="pago" id="pago_{{ ev.id if ev else 'novo' }}" {{ 'checked' if ev and ev.pago }}>
+        <label class="form-check-label small" for="pago_{{ ev.id if ev else 'novo' }}">Multa já paga</label>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary w-100 py-2"><i class="fa-solid fa-floppy-disk me-1"></i> {{ botao }}</button>
+  </form>
+  <script>
+    (function () {
+      const form = document.currentScript.previousElementSibling;
+      const seletor = form.querySelector('.tipo-evento');
+      function atualizar() {
+        form.querySelectorAll('.campo-tipo').forEach(function (el) {
+          el.classList.toggle('d-none', el.dataset.tipos.split(',').indexOf(seletor.value) === -1);
+        });
+      }
+      seletor.addEventListener('change', atualizar);
+      atualizar();
+    })();
+  </script>
+{% endmacro %}

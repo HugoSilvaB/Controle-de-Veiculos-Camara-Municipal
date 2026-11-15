@@ -1,0 +1,46 @@
+{% extends 'base_admin.html' %}
+{% from '_macros.html' import csrf %}
+{% set pagina = 'configuracoes' %}
+{% block titulo %}Configurações{% endblock %}
+
+{% block conteudo %}
+<div class="row justify-content-center">
+<div class="col-lg-8 col-xl-6">
+    <div class="mb-3">
+        <h1 class="h3 titulo-claro mb-0">Configurações</h1>
+        <span class="subtitulo-claro small">Endereço do sistema e limites dos alertas</span>
+    </div>
+    <form method="post" class="card shadow-sm border-0">
+        {{ csrf() }}
+        <div class="card-body p-4">
+            <h2 class="h6 text-uppercase text-secondary mb-3">Endereço dos QR Codes</h2>
+            <div class="mb-2">
+                <label class="form-label small fw-semibold text-secondary">ENDEREÇO PÚBLICO DO SISTEMA</label>
+                <input type="text" name="base_url" class="form-control" required value="{{ v.base_url }}" placeholder="https://frota.exemplo.gov.br">
+            </div>
+            <div class="alert alert-light border small">
+                Os QR Codes apontam para: <code>{{ exemplo }}</code><br>
+                <strong>Atenção:</strong> se este endereço mudar, os adesivos já impressos deixam de funcionar. Reimprima-os depois de alterar.
+            </div>
+
+            <h2 class="h6 text-uppercase text-secondary mt-4 mb-3">Alertas</h2>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold text-secondary">CNH VENCENDO (DIAS)</label>
+                    <input type="number" name="dias_alerta_cnh" class="form-control" min="0" required value="{{ v.dias_alerta_cnh }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold text-secondary">REVISÃO PRÓXIMA (KM)</label>
+                    <input type="number" name="km_alerta_revisao" class="form-control" min="0" required value="{{ v.km_alerta_revisao }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold text-secondary">VIAGEM ABERTA HÁ (HORAS)</label>
+                    <input type="number" name="horas_viagem_aberta" class="form-control" min="0" required value="{{ v.horas_viagem_aberta }}">
+                </div>
+            </div>
+            <button class="btn btn-primary mt-4"><i class="fa-solid fa-floppy-disk me-1"></i> Salvar configurações</button>
+        </div>
+    </form>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends 'base_admin.html' %}
+{% from '_macros.html' import csrf %}
+{% set pagina = 'veiculos' %}
+{% block titulo %}Editar veículo{% endblock %}
+
+{% block conteudo %}
+<div class="row justify-content-center">
+<div class="col-md-8 col-lg-5 col-xl-4">
+    <div class="card shadow border-0">
+        <div class="card-header"><i class="fa-solid fa-pen me-2"></i>Editar {{ veiculo.modelo }}</div>
+        <div class="card-body p-4">
+            <form method="post">
+                {{ csrf() }}
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">MODELO</label>
+                    <input type="text" name="modelo" class="form-control" maxlength="50" required value="{{ veiculo.modelo }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">PLACA</label>
+                    <input type="text" name="placa" class="form-control text-uppercase" maxlength="8" required value="{{ veiculo.placa }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">KM ATUAL</label>
+                    <input type="text" name="km_atual" inputmode="decimal" class="form-control" value="{{ veiculo.km_atual|int }}">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small fw-semibold text-secondary">PRÓXIMA REVISÃO (KM)</label>
+                    <input type="text" name="proxima_revisao_km" inputmode="decimal" class="form-control" value="{{ veiculo.proxima_revisao_km|int if veiculo.proxima_revisao_km else '' }}">
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('gestao_veiculos') }}" class="btn btn-light flex-fill">Cancelar</a>
+                    <button class="btn btn-primary flex-fill">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}

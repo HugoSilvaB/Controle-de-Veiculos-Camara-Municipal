@@ -1,0 +1,18 @@
+{% extends 'base_publico.html' %}
+{% block titulo %}Início{% endblock %}
+{% block conteudo %}
+<div class="card shadow-lg border-0 text-center">
+    <div class="card-body p-4 p-md-5">
+        <img src="{{ url_for('static', filename='images/brasao.png') }}" alt="Brasão" class="brasao-card mb-3">
+        <h1 class="h4 fw-bold mb-1">Controle de Frota</h1>
+        <p class="text-muted mb-4">Câmara Municipal de Novo Gama</p>
+        <div class="alert alert-info text-start small border-0">
+            <i class="fa-solid fa-qrcode me-1"></i>
+            Para retirar ou devolver um veículo, <strong>escaneie o QR Code</strong> fixado no próprio veículo.
+        </div>
+        <a href="{{ url_for('login_admin') }}" class="btn btn-primary w-100 py-2">
+            <i class="fa-solid fa-lock me-1"></i> Acesso do gestor
+        </a>
+    </div>
+</div>
+{% endblock %}

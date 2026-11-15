@@ -1,0 +1,28 @@
+{% from '_macros.html' import mensagens %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block titulo %}Controle de Frota{% endblock %} · Câmara de Novo Gama</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tema.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body class="d-flex align-items-center min-vh-100 py-4">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="{% block coluna %}col-md-6 col-lg-5 col-xl-4{% endblock %}">
+                {% block topo %}{% endblock %}
+                {{ mensagens() }}
+                {% block conteudo %}{% endblock %}
+                <p class="text-center subtitulo-claro small mt-4 mb-0">Câmara Municipal de Novo Gama &middot; Controle de Frota</p>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

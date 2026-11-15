@@ -1,0 +1,49 @@
+{# Barra de filtros compartilhada por Histórico e Ocorrências.
+   Espera: f (request.args), veiculos, gabinetes, endpoint_filtro, mostrar_status (bool), endpoint_exportar (opcional) #}
+<form method="get" action="{{ url_for(endpoint_filtro) }}" class="filtros card shadow-sm border-0 mb-3">
+    <div class="card-body row g-2 align-items-end">
+        <div class="col-6 col-md-3 col-xl-2">
+            <label class="form-label small text-secondary mb-1">De</label>
+            <input type="date" name="de" class="form-control form-control-sm" value="{{ f.get('de', '') }}">
+        </div>
+        <div class="col-6 col-md-3 col-xl-2">
+            <label class="form-label small text-secondary mb-1">Até</label>
+            <input type="date" name="ate" class="form-control form-control-sm" value="{{ f.get('ate', '') }}">
+        </div>
+        <div class="col-6 col-md-3 col-xl-2">
+            <label class="form-label small text-secondary mb-1">Veículo</label>
+            <select name="veiculo" class="form-select form-select-sm">
+                <option value="">Todos</option>
+                {% for v in veiculos %}<option value="{{ v.id }}" {{ 'selected' if f.get('veiculo') == v.id|string }}>{{ v.modelo }} · {{ v.placa }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-3 col-xl-2">
+            <label class="form-label small text-secondary mb-1">Unidade</label>
+            <select name="gabinete" class="form-select form-select-sm">
+                <option value="">Todas</option>
+                {% for g in gabinetes %}<option value="{{ g.id }}" {{ 'selected' if f.get('gabinete') == g.id|string }}>{{ g.rotulo }}{{ ' (inativo)' if not g.ativo }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-3 col-xl-2">
+            <label class="form-label small text-secondary mb-1">Motorista</label>
+            <input type="text" name="motorista" class="form-control form-control-sm" placeholder="Nome" value="{{ f.get('motorista', '') }}">
+        </div>
+        {% if mostrar_status %}
+        <div class="col-6 col-md-3 col-xl-1">
+            <label class="form-label small text-secondary mb-1">Situação</label>
+            <select name="status" class="form-select form-select-sm">
+                <option value="">Todas</option>
+                <option value="andamento" {{ 'selected' if f.get('status') == 'andamento' }}>Em andamento</option>
+                <option value="concluidas" {{ 'selected' if f.get('status') == 'concluidas' }}>Concluídas</option>
+            </select>
+        </div>
+        {% endif %}
+        <div class="col-12 col-xl d-flex gap-2 justify-content-xl-end">
+            <button class="btn btn-sm btn-primary"><i class="fa-solid fa-filter me-1"></i>Filtrar</button>
+            <a href="{{ url_for(endpoint_filtro) }}" class="btn btn-sm btn-light">Limpar</a>
+            {% if endpoint_exportar %}
+            <a href="{{ url_for(endpoint_exportar, **filtros) }}" class="btn btn-sm btn-success"><i class="fa-solid fa-file-excel me-1"></i>Excel</a>
+            {% endif %}
+        </div>
+    </div>
+</form>

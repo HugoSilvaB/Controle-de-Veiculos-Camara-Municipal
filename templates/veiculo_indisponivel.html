@@ -1,0 +1,21 @@
+{% extends 'base_publico.html' %}
+{% block titulo %}Veículo indisponível{% endblock %}
+{% block conteudo %}
+<div class="card shadow-lg border-0 text-center">
+    <div class="card-body p-4 p-md-5">
+        <div class="icone-aviso mb-3">
+            <i class="fa-solid fa-{{ 'screwdriver-wrench' if motivo == 'manutencao' else 'ban' }}"></i>
+        </div>
+        <h1 class="h4 fw-bold">Veículo indisponível</h1>
+        <p class="text-muted mb-3">{{ veiculo.modelo }} · <strong>{{ veiculo.placa }}</strong></p>
+        <div class="alert alert-warning small border-0 mb-0">
+            {% if motivo == 'manutencao' %}
+                Este veículo está <strong>em manutenção</strong> e não pode ser retirado agora.
+            {% else %}
+                Este veículo está <strong>desativado</strong> e não pode ser utilizado.
+            {% endif %}
+            Procure o gestor da frota.
+        </div>
+    </div>
+</div>
+{% endblock %}

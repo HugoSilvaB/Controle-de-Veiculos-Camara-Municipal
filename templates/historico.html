@@ -1,0 +1,48 @@
+{% extends 'base_admin.html' %}
+{% from '_macros.html' import paginacao, vazio %}
+{% set pagina = 'historico' %}
+{% set endpoint_filtro = 'historico' %}
+{% set mostrar_status = true %}
+{% set endpoint_exportar = 'historico_exportar' %}
+{% block titulo %}Histórico de viagens{% endblock %}
+
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+    <div>
+        <h1 class="h3 titulo-claro mb-0">Histórico de viagens</h1>
+        <span class="subtitulo-claro small">{{ total }} viagem(ns) · {{ km_total|km }} km rodados no filtro atual</span>
+    </div>
+</div>
+
+{% include '_filtro_viagens.html' %}
+
+<div class="card shadow-sm border-0">
+    {% if pag.items %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Saída</th><th>Veículo</th><th>Motorista</th><th>Unidade</th><th>Destino</th><th class="text-end">KM</th><th>Situação</th><th></th></tr></thead>
+            <tbody>
+            {% for r in pag.items %}
+            <tr>
+                <td class="text-nowrap">{{ r.data_hora_saida|dt }}</td>
+                <td>{{ r.veiculo.modelo }}<br><small class="text-muted">{{ r.veiculo.placa }}</small></td>
+                <td>{{ r.motorista_nome }}</td>
+                <td>{{ r.gabinete_vereador }}</td>
+                <td>{{ r.destino_finalidade or '–' }}</td>
+                <td class="text-end">{{ r.km_rodados|km if r.concluida else '–' }}</td>
+                <td>
+                    {% if r.concluida %}<span class="badge text-bg-success">Concluída</span>{% else %}<span class="badge text-bg-danger">Em andamento</span>{% endif %}
+                    {% if r.tem_ocorrencia %}<span class="badge text-bg-warning" title="Há ocorrência registrada"><i class="fa-solid fa-triangle-exclamation"></i></span>{% endif %}
+                </td>
+                <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{{ url_for('viagem_detalhe', id=r.id) }}"><i class="fa-solid fa-eye"></i></a></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {{ paginacao(pag, 'historico', filtros) }}
+    {% else %}
+        {{ vazio('Nenhuma viagem encontrada com esses filtros.', 'route') }}
+    {% endif %}
+</div>
+{% endblock %}

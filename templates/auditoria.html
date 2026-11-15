@@ -1,0 +1,60 @@
+{% extends 'base_admin.html' %}
+{% from '_macros.html' import paginacao, vazio %}
+{% set pagina = 'auditoria' %}
+{% block titulo %}Auditoria{% endblock %}
+
+{% block conteudo %}
+<div class="mb-3">
+    <h1 class="h3 titulo-claro mb-0">Auditoria</h1>
+    <span class="subtitulo-claro small">Registro de tudo o que foi feito no sistema</span>
+</div>
+
+<form method="get" class="filtros card shadow-sm border-0 mb-3">
+    <div class="card-body row g-2 align-items-end">
+        <div class="col-6 col-md-2">
+            <label class="form-label small text-secondary mb-1">De</label>
+            <input type="date" name="de" class="form-control form-control-sm" value="{{ f.get('de', '') }}">
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label small text-secondary mb-1">Até</label>
+            <input type="date" name="ate" class="form-control form-control-sm" value="{{ f.get('ate', '') }}">
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label small text-secondary mb-1">Usuário</label>
+            <input type="text" name="usuario" class="form-control form-control-sm" value="{{ f.get('usuario', '') }}">
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label small text-secondary mb-1">Ação / texto</label>
+            <input type="text" name="acao" class="form-control form-control-sm" placeholder="Ex: login, motorista..." value="{{ f.get('acao', '') }}">
+        </div>
+        <div class="col-12 col-md-2 d-flex gap-2">
+            <button class="btn btn-sm btn-primary flex-fill">Filtrar</button>
+            <a href="{{ url_for('auditoria') }}" class="btn btn-sm btn-light">Limpar</a>
+        </div>
+    </div>
+</form>
+
+<div class="card shadow-sm border-0">
+    {% if pag.items %}
+    <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle mb-0">
+            <thead><tr><th>Data / hora</th><th>Usuário</th><th>Ação</th><th>Detalhe</th><th>IP</th></tr></thead>
+            <tbody>
+            {% for l in pag.items %}
+            <tr>
+                <td class="text-nowrap">{{ l.data_hora|dt }}</td>
+                <td>{{ l.usuario or '–' }}</td>
+                <td><span class="badge text-bg-secondary">{{ l.acao }}</span></td>
+                <td class="small">{{ l.detalhe or '' }}</td>
+                <td class="small text-muted">{{ l.ip or '' }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {{ paginacao(pag, 'auditoria', filtros) }}
+    {% else %}
+        {{ vazio('Nenhum registro encontrado.', 'list-check') }}
+    {% endif %}
+</div>
+{% endblock %}

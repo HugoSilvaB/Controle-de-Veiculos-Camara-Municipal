@@ -1,0 +1,52 @@
+{% extends 'base_publico.html' %}
+{% from '_macros.html' import csrf %}
+{% block titulo %}Retirar veículo{% endblock %}
+{% block conteudo %}
+<div class="card shadow-lg border-0">
+    <div class="card-header text-center py-3">
+        <img src="{{ url_for('static', filename='images/brasao.png') }}" alt="Brasão" class="brasao-header me-2">
+        <span class="fw-bold">Retirada de veículo</span>
+    </div>
+    <div class="card-body p-4">
+        <div class="veiculo-destaque text-center mb-4">
+            <i class="fa-solid fa-car-side fa-2x mb-1"></i>
+            <div class="fw-bold fs-5">{{ veiculo.modelo }}</div>
+            <span class="badge badge-ouro">{{ veiculo.placa }}</span>
+            <div class="small text-muted mt-1">Último KM registrado: {{ veiculo.km_atual|km }}</div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+            {{ csrf() }}
+            <div class="mb-3">
+                <label class="form-label small fw-semibold text-secondary">SEU CPF</label>
+                <input type="text" name="cpf" class="form-control form-control-lg" inputmode="numeric"
+                       placeholder="000.000.000-00" maxlength="14" required autocomplete="off"
+                       value="{{ dados.get('cpf', '') }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-semibold text-secondary">KM ATUAL DO PAINEL</label>
+                <input type="text" name="km_saida" class="form-control form-control-lg" inputmode="decimal"
+                       placeholder="Ex: 45230" required value="{{ dados.get('km_saida', '') }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-semibold text-secondary">DESTINO / FINALIDADE</label>
+                <input type="text" name="destino_finalidade" class="form-control" maxlength="255"
+                       placeholder="Ex: Reunião na Secretaria de Obras" required value="{{ dados.get('destino_finalidade', '') }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-semibold text-secondary">FOTO DO PAINEL (KM)</label>
+                <input type="file" name="foto_km_saida" class="form-control" accept="image/*" capture="environment" required>
+                <div class="form-text">Fotografe o odômetro de forma legível.</div>
+            </div>
+            <label class="termo-box d-flex gap-2 align-items-start p-3 border rounded mb-4" for="termo">
+                <input class="form-check-input mt-1 flex-shrink-0" type="checkbox" name="termo_responsabilidade" id="termo" required>
+                <span class="small">Declaro que possuo CNH válida, usarei o veículo apenas a serviço da Câmara e
+                responsabilizo-me por multas e danos ocorridos durante o uso.</span>
+            </label>
+            <button type="submit" class="btn btn-success w-100 py-3 fw-bold">
+                <i class="fa-solid fa-key me-1"></i> INICIAR VIAGEM
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

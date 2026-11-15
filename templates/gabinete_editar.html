@@ -1,0 +1,47 @@
+{% extends 'base_admin.html' %}
+{% from '_macros.html' import csrf %}
+{% set pagina = 'gabinetes' %}
+{% block titulo %}Editar unidade{% endblock %}
+
+{% block conteudo %}
+<div class="row justify-content-center">
+<div class="col-md-8 col-lg-5 col-xl-4">
+    <div class="card shadow border-0">
+        <div class="card-header"><i class="fa-solid fa-pen me-2"></i>Editar: {{ gabinete.rotulo }}</div>
+        <div class="card-body p-4">
+            <form method="post">
+                {{ csrf() }}
+                {% if gabinete.tipo == 'Gabinete' %}
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">NOME DO VEREADOR</label>
+                    <input type="text" name="vereador" class="form-control" required maxlength="100" value="{{ gabinete.vereador or '' }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">LEGISLATURA</label>
+                    <select name="legislatura_id" class="form-select">
+                        <option value="">Sem legislatura</option>
+                        {% for l in legislaturas %}<option value="{{ l.id }}" {{ 'selected' if l.id == gabinete.legislatura_id }}>{{ l.rotulo }}</option>{% endfor %}
+                    </select>
+                </div>
+                {% elif gabinete.tipo == 'Administrativo' %}
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">NOME DO SETOR</label>
+                    <input type="text" name="nome" class="form-control" required maxlength="100" value="{{ gabinete.nome or '' }}">
+                </div>
+                {% else %}
+                <div class="alert alert-info small border-0">
+                    O nome do presidente muda a cada ano e é definido em
+                    <a href="{{ url_for('mesa_diretora') }}">Mesa Diretora</a>. Não há nada a editar aqui.
+                </div>
+                {% endif %}
+                <div class="alert alert-light border small">As viagens antigas mantêm o nome que a unidade tinha na época.</div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('gabinetes') }}" class="btn btn-light flex-fill">Cancelar</a>
+                    <button class="btn btn-primary flex-fill">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}

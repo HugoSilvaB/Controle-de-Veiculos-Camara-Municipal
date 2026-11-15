@@ -1,0 +1,18 @@
+CONTROLE DE FROTA - CAMARA MUNICIPAL DE NOVO GAMA (versao completa)
+
+COMO ATUALIZAR SEM PERDER DADOS
+1. Feche o sistema e faca copia da pasta antiga.
+2. Copie os arquivos desta pasta POR CIMA da antiga (nao troque a pasta):
+   mantenha database.db, a pasta uploads/ e o .env.
+   Pode apagar os scripts antigos (criar_admin_orm.py, listar_usuarios.py, setup_admin.py, testar_acessos.py).
+3. No PowerShell, dentro da pasta:  pip install -r requirements.txt
+4. Inicie:  python app.py   (ou de dois cliques em iniciar.bat)
+5. Na primeira execucao o banco e atualizado sozinho (dados antigos preservados).
+6. Entre em http://localhost:5000/admin/login . Se a senha ainda for admin123, o sistema pede para trocar.
+
+PRIMEIROS PASSOS
+- Sistema > Configuracoes: informe o ENDERECO PUBLICO real (usado nos QR Codes) ANTES de imprimir etiquetas.
+- Pessoas > Mesa Diretora: confira o presidente de cada ano.
+- Pessoas > Gabinetes e legislatura: confira a legislatura e os vereadores.
+- A cada 4 anos use "Nova legislatura"; depois remaneje os motoristas dos gabinetes antigos.
+- Backups automaticos diarios ficam na pasta backups/ (guarde uma copia fora do computador).

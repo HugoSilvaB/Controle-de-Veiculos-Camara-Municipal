@@ -1,0 +1,172 @@
+{% extends 'base_admin.html' %}
+{% from '_macros.html' import csrf, vazio %}
+{% set pagina = 'gabinetes' %}
+{% block titulo %}Gabinetes e legislatura{% endblock %}
+
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+    <div>
+        <h1 class="h3 titulo-claro mb-0">Gabinetes e legislatura</h1>
+        <span class="subtitulo-claro small">
+            {% if leg_ativa %}Legislatura atual: <strong>{{ leg_ativa.rotulo }}</strong>{% else %}Nenhuma legislatura ativa{% endif %}
+        </span>
+    </div>
+    <a href="{{ url_for('mesa_diretora') }}" class="btn btn-light"><i class="fa-solid fa-user-tie me-1"></i> Mesa Diretora (presidente do ano)</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4 col-xl-3">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header"><i class="fa-solid fa-plus me-2"></i>Novo gabinete / setor</div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('gabinete_novo') }}" id="formGabinete">
+                    {{ csrf() }}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">TIPO</label>
+                        <select name="tipo" id="tipoGab" class="form-select">
+                            <option value="Gabinete">Gabinete de vereador</option>
+                            <option value="Administrativo">Setor administrativo</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 grupo-gab" data-tipo="Gabinete">
+                        <label class="form-label small fw-semibold text-secondary">NOME DO VEREADOR</label>
+                        <input type="text" name="vereador" class="form-control" maxlength="100">
+                    </div>
+                    <div class="mb-3 grupo-gab" data-tipo="Gabinete">
+                        <label class="form-label small fw-semibold text-secondary">LEGISLATURA</label>
+                        <select name="legislatura_id" class="form-select">
+                            {% for l in legislaturas %}<option value="{{ l.id }}" {{ 'selected' if leg_ativa and l.id == leg_ativa.id }}>{{ l.rotulo }}{{ ' (atual)' if l.ativa }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3 grupo-gab d-none" data-tipo="Administrativo">
+                        <label class="form-label small fw-semibold text-secondary">NOME DO SETOR</label>
+                        <input type="text" name="nome" class="form-control" maxlength="100" placeholder="Ex: Secretaria Geral">
+                    </div>
+                    <button class="btn btn-primary w-100"><i class="fa-solid fa-floppy-disk me-1"></i> Cadastrar</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 card-destaque">
+            <div class="card-header"><i class="fa-solid fa-landmark me-2"></i>Nova legislatura</div>
+            <div class="card-body">
+                <p class="small text-muted">Use quando tomar posse uma nova composição (a cada 4 anos).</p>
+                <form method="post" action="{{ url_for('legislatura_nova') }}" onsubmit="return confirm('Criar nova legislatura? Se a opção estiver marcada, os gabinetes antigos serão inativados.')">
+                    {{ csrf() }}
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold text-secondary">INÍCIO</label>
+                            <input type="number" name="inicio" class="form-control" min="2000" max="2100" value="{{ ano_sugerido }}" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold text-secondary">FIM</label>
+                            <input type="number" name="fim" class="form-control" min="2000" max="2100" value="{{ ano_sugerido + 3 }}" required>
+                        </div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="inativar_anteriores" id="inativarAnt" checked>
+                        <label class="form-check-label small" for="inativarAnt">Inativar os gabinetes da legislatura anterior (motoristas ficam bloqueados até serem remanejados)</label>
+                    </div>
+                    <button class="btn btn-outline-primary w-100">Criar nova legislatura</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8 col-xl-9">
+        <div class="card shadow-sm border-0">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fa-solid fa-building-columns me-2"></i>Unidades ({{ gabinetes|length }})</span>
+                <a class="btn btn-sm btn-outline-light" href="{{ url_for('gabinetes', mostrar='ativos' if mostrar == 'todos' else 'todos') }}">
+                    {{ 'Mostrar só ativos' if mostrar == 'todos' else 'Mostrar inativos também' }}
+                </a>
+            </div>
+            {% if gabinetes %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead><tr><th>Unidade</th><th>Tipo</th><th>Legislatura</th><th class="text-center">Motoristas</th><th class="text-end">Ações</th></tr></thead>
+                    <tbody>
+                    {% for g in gabinetes %}
+                    <tr class="{{ 'linha-inativa' if not g.ativo }}">
+                        <td><strong>{{ g.rotulo }}</strong>{% if not g.ativo %} <span class="badge text-bg-secondary">inativo{{ ' em ' ~ g.inativado_em|d if g.inativado_em }}</span>{% endif %}</td>
+                        <td>{{ g.tipo }}</td>
+                        <td>{{ g.legislatura.rotulo if g.legislatura else '–' }}</td>
+                        <td class="text-center">{{ contagem.get(g.id, 0) }}</td>
+                        <td class="text-end text-nowrap">
+                            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('gabinete_editar', id=g.id) }}" title="Editar"><i class="fa-solid fa-pen"></i></a>
+                            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#remanejar{{ g.id }}" title="Remanejar motoristas"><i class="fa-solid fa-people-arrows"></i></button>
+                            <form method="post" action="{{ url_for('gabinete_ativo', id=g.id) }}" class="d-inline">{{ csrf() }}
+                                <button class="btn btn-sm btn-outline-secondary" title="{{ 'Inativar' if g.ativo else 'Reativar' }}"><i class="fa-solid fa-{{ 'toggle-on' if g.ativo else 'toggle-off' }}"></i></button>
+                            </form>
+                            <form method="post" action="{{ url_for('gabinete_excluir', id=g.id) }}" class="d-inline" onsubmit="return confirm('Excluir esta unidade? Só é possível se não houver motoristas ou viagens.')">{{ csrf() }}
+                                <button class="btn btn-sm btn-outline-danger" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                {{ vazio('Nenhuma unidade cadastrada.', 'landmark') }}
+            {% endif %}
+        </div>
+
+        {% if legislaturas %}
+        <div class="card shadow-sm border-0 mt-4">
+            <div class="card-header"><i class="fa-solid fa-clock-rotate-left me-2"></i>Legislaturas</div>
+            <ul class="list-group list-group-flush">
+                {% for l in legislaturas %}
+                <li class="list-group-item d-flex justify-content-between"><span>{{ l.rotulo }}</span>
+                    <span class="badge text-bg-{{ 'success' if l.ativa else 'secondary' }}">{{ 'Atual' if l.ativa else 'Encerrada' }}</span></li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{# Remanejamento em lote: move todos os motoristas de uma unidade para outra #}
+{% for g in gabinetes %}
+<div class="modal fade" id="remanejar{{ g.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" method="post" action="{{ url_for('gabinete_remanejar', id=g.id) }}">
+            {{ csrf() }}
+            <div class="modal-header">
+                <h5 class="modal-title">Remanejar motoristas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted">Move <strong>todos</strong> os motoristas de <strong>{{ g.rotulo }}</strong> ({{ contagem.get(g.id, 0) }} ativo(s)) para a unidade escolhida.</p>
+                <label class="form-label small fw-semibold text-secondary">UNIDADE DE DESTINO</label>
+                <select name="destino_id" class="form-select" required>
+                    <option value="" disabled selected>Selecione...</option>
+                    {% for d in ativos if d.id != g.id %}<option value="{{ d.id }}">{{ d.rotulo }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Remanejar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function () {
+        var sel = document.getElementById('tipoGab');
+        function atualizar() {
+            document.querySelectorAll('#formGabinete .grupo-gab').forEach(function (el) {
+                var ativo = el.dataset.tipo === sel.value;
+                el.classList.toggle('d-none', !ativo);
+                el.querySelectorAll('input,select').forEach(function (c) { c.disabled = !ativo; });
+            });
+        }
+        sel.addEventListener('change', atualizar);
+        atualizar();
+    })();
+</script>
+{% endblock %}

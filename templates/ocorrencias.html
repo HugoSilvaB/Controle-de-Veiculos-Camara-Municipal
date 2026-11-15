@@ -1,0 +1,50 @@
+{% extends 'base_admin.html' %}
+{% from '_macros.html' import paginacao, vazio %}
+{% set pagina = 'ocorrencias' %}
+{% set endpoint_filtro = 'ocorrencias' %}
+{% set mostrar_status = false %}
+{% set endpoint_exportar = none %}
+{% block titulo %}Ocorrências{% endblock %}
+
+{% block conteudo %}
+<div class="mb-3">
+    <h1 class="h3 titulo-claro mb-0">Ocorrências</h1>
+    <span class="subtitulo-claro small">Viagens com observações ou fotos de ocorrência · {{ pag.total }} registro(s)</span>
+</div>
+
+{% include '_filtro_viagens.html' %}
+
+{% if pag.items %}
+<div class="row g-3">
+    {% for r in pag.items %}
+    <div class="col-md-6 col-xl-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>{{ r.veiculo.modelo }} · {{ r.veiculo.placa }}</span>
+                <small class="opacity-75">{{ r.data_hora_saida|d }}</small>
+            </div>
+            <div class="card-body">
+                <div class="small text-muted mb-2"><i class="fa-solid fa-user me-1"></i>{{ r.motorista_nome }} · {{ r.gabinete_vereador }}</div>
+                {% if r.observacoes %}<p class="mb-3">{{ r.observacoes }}</p>{% else %}<p class="text-muted fst-italic mb-3">Sem texto, apenas fotos.</p>{% endif %}
+                {% if r.fotos_ocorrencia_multiplas %}
+                <div class="d-flex flex-wrap gap-2">
+                    {% for f in r.fotos_ocorrencia_multiplas %}
+                    <a href="#" data-foto="{{ url_for('uploaded_file', filename=f.caminho_foto) }}" data-titulo="Ocorrência - {{ r.veiculo.modelo }}">
+                        <img class="foto-mini foto-mini-p" src="{{ url_for('uploaded_file', filename=f.caminho_foto) }}" alt="Foto da ocorrência" loading="lazy">
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-transparent border-0 pt-0">
+                <a href="{{ url_for('viagem_detalhe', id=r.id) }}" class="btn btn-sm btn-outline-secondary">Ver viagem</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<div class="card border-0 shadow-sm mt-3">{{ paginacao(pag, 'ocorrencias', filtros) }}</div>
+{% else %}
+<div class="card shadow-sm border-0">{{ vazio('Nenhuma ocorrência registrada.', 'shield-halved') }}</div>
+{% endif %}
+{% endblock %}

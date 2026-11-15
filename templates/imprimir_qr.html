@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code - {{ veiculo.modelo }} {{ veiculo.placa }}</title>
+    <style>
+        body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 24px; text-align: center; color: #111; }
+        .etiqueta { display: inline-block; border: 3px solid #0b2a4a; border-radius: 16px; padding: 28px 36px; max-width: 420px; }
+        .etiqueta img.brasao { height: 70px; }
+        h1 { margin: 8px 0 0; font-size: 20px; letter-spacing: .5px; }
+        h2 { margin: 2px 0 14px; font-size: 14px; font-weight: normal; color: #444; }
+        .qr { width: 280px; height: 280px; }
+        .modelo { font-size: 24px; font-weight: bold; margin-top: 10px; }
+        .placa { display: inline-block; margin-top: 6px; padding: 4px 16px; border: 2px solid #111; border-radius: 6px; font-size: 22px; font-weight: bold; letter-spacing: 2px; }
+        .instrucao { margin-top: 14px; font-size: 13px; color: #333; }
+        .url { margin-top: 10px; font-size: 10px; color: #777; word-break: break-all; }
+        .acoes { margin-bottom: 20px; }
+        button { padding: 10px 22px; font-size: 15px; cursor: pointer; }
+        @media print { .acoes { display: none; } body { padding: 0; } }
+    </style>
+</head>
+<body>
+    <div class="acoes"><button onclick="window.print()">🖨 Imprimir</button></div>
+    <div class="etiqueta">
+        <img class="brasao" src="{{ url_for('static', filename='images/brasao.png') }}" alt="Brasão">
+        <h1>CÂMARA MUNICIPAL DE NOVO GAMA</h1>
+        <h2>Controle de Frota</h2>
+        {% if qr_local %}
+            <img class="qr" src="{{ url_for('qr_png', id=veiculo.id) }}" alt="QR Code">
+        {% else %}
+            <img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data={{ url_viagem|urlencode }}" alt="QR Code">
+        {% endif %}
+        <div class="modelo">{{ veiculo.modelo }}</div>
+        <div class="placa">{{ veiculo.placa }}</div>
+        <div class="instrucao">Escaneie para <strong>retirar</strong> ou <strong>devolver</strong> o veículo.</div>
+        <div class="url">{{ url_viagem }}</div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,108 @@
+{% extends 'base_admin.html' %}
+{% from '_macros.html' import csrf, vazio %}
+{% set pagina = 'motoristas' %}
+{% block titulo %}Motoristas{% endblock %}
+
+{% block conteudo %}
+<div class="mb-3">
+    <h1 class="h3 titulo-claro mb-0">Motoristas</h1>
+    <span class="subtitulo-claro small">{{ motoristas|length }} motorista(s) na lista atual</span>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4 col-xl-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-header"><i class="fa-solid fa-user-plus me-2"></i>Novo motorista</div>
+            <div class="card-body">
+                <form method="post">
+                    {{ csrf() }}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">NOME COMPLETO</label>
+                        <input type="text" name="nome" class="form-control" required maxlength="100">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">CPF</label>
+                        <input type="text" name="cpf" class="form-control" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">GABINETE / SETOR</label>
+                        <select name="gabinete_id" class="form-select" required>
+                            <option value="" disabled selected>Selecione...</option>
+                            {% for g in gabinetes %}<option value="{{ g.id }}">{{ g.rotulo }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">VALIDADE DA CNH</label>
+                        <input type="date" name="validade_cnh" class="form-control" required>
+                    </div>
+                    <button class="btn btn-primary w-100"><i class="fa-solid fa-floppy-disk me-1"></i> Cadastrar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8 col-xl-9">
+        <form method="get" class="filtros card shadow-sm border-0 mb-3">
+            <div class="card-body row g-2 align-items-end">
+                <div class="col-12 col-md-4">
+                    <label class="form-label small text-secondary mb-1">Buscar</label>
+                    <input type="text" name="q" class="form-control form-control-sm" placeholder="Nome ou CPF" value="{{ busca }}">
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-secondary mb-1">Situação</label>
+                    <select name="status" class="form-select form-select-sm">
+                        <option value="ativos" {{ 'selected' if status == 'ativos' }}>Ativos</option>
+                        <option value="inativos" {{ 'selected' if status == 'inativos' }}>Inativos</option>
+                        <option value="todos" {{ 'selected' if status == 'todos' }}>Todos</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-secondary mb-1">Gabinete</label>
+                    <select name="gabinete" class="form-select form-select-sm">
+                        <option value="">Todos</option>
+                        {% for g in todos_gabinetes %}<option value="{{ g.id }}" {{ 'selected' if filtro_gabinete == g.id }}>{{ g.rotulo }}{{ ' (inativo)' if not g.ativo }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md-2 d-grid"><button class="btn btn-sm btn-primary">Filtrar</button></div>
+            </div>
+        </form>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-header"><i class="fa-solid fa-id-card me-2"></i>Motoristas cadastrados</div>
+            {% if motoristas %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead><tr><th>Nome</th><th>CPF</th><th>Unidade</th><th>CNH</th><th class="text-end">Ações</th></tr></thead>
+                    <tbody>
+                    {% for m in motoristas %}
+                    <tr class="{{ 'linha-inativa' if not m.ativo }}">
+                        <td><strong>{{ m.nome }}</strong>{% if not m.ativo %} <span class="badge text-bg-secondary">inativo</span>{% endif %}</td>
+                        <td>{{ m.cpf|cpf }}</td>
+                        <td>{{ m.gabinete_rotulo }}{% if not m.gabinete_ativo %} <span class="badge text-bg-warning" title="Gabinete inativo: remaneje o motorista">setor inativo</span>{% endif %}</td>
+                        <td>
+                            {% if not m.validade_cnh %}<span class="badge text-bg-warning">sem data</span>
+                            {% elif m.dias_cnh < 0 %}<span class="badge text-bg-danger">Vencida {{ m.validade_cnh|d }}</span>
+                            {% elif m.dias_cnh <= dias_alerta %}<span class="badge text-bg-warning">{{ m.validade_cnh|d }} ({{ m.dias_cnh }}d)</span>
+                            {% else %}<span class="badge text-bg-success">{{ m.validade_cnh|d }}</span>{% endif %}
+                        </td>
+                        <td class="text-end text-nowrap">
+                            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('motorista_editar', id=m.id) }}" title="Editar"><i class="fa-solid fa-pen"></i></a>
+                            <form method="post" action="{{ url_for('motorista_ativo', id=m.id) }}" class="d-inline">{{ csrf() }}
+                                <button class="btn btn-sm btn-outline-secondary" title="{{ 'Desativar' if m.ativo else 'Reativar' }}"><i class="fa-solid fa-{{ 'user-slash' if m.ativo else 'user-check' }}"></i></button>
+                            </form>
+                            <form method="post" action="{{ url_for('motorista_excluir', id=m.id) }}" class="d-inline" onsubmit="return confirm('Excluir {{ m.nome|e }}? Só é possível se não houver viagens no histórico.')">{{ csrf() }}
+                                <button class="btn btn-sm btn-outline-danger" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                {{ vazio('Nenhum motorista encontrado.', 'id-card') }}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

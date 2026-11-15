@@ -1,0 +1,139 @@
+{% extends 'base_admin.html' %}
+{% from '_macros.html' import csrf, vazio %}
+{% set pagina = 'painel' %}
+{% block titulo %}Painel{% endblock %}
+{% block head %}<meta http-equiv="refresh" content="120">{% endblock %}
+
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+    <div>
+        <h1 class="h3 titulo-claro mb-0">Painel de monitoramento</h1>
+        <span class="subtitulo-claro small">Hoje, {{ hoje|d }} · atualiza sozinho a cada 2 minutos</span>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3"><div class="kpi kpi-azul"><i class="fa-solid fa-road"></i><div><small>Em rota agora</small><strong>{{ viagens_em_rota|length }}</strong></div></div></div>
+    <div class="col-6 col-lg-3"><div class="kpi kpi-verde"><i class="fa-solid fa-circle-check"></i><div><small>Disponíveis</small><strong>{{ disponiveis }}</strong></div></div></div>
+    <div class="col-6 col-lg-3"><div class="kpi kpi-ouro"><i class="fa-solid fa-calendar-day"></i><div><small>Viagens hoje</small><strong>{{ viagens_hoje }}</strong></div></div></div>
+    <div class="col-6 col-lg-3"><div class="kpi kpi-roxo"><i class="fa-solid fa-gauge-high"></i><div><small>KM no mês</small><strong>{{ km_mes|km }}</strong></div></div></div>
+</div>
+
+{% if alertas %}
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header"><i class="fa-solid fa-bell me-2"></i>Alertas ({{ alertas|length }})</div>
+    <div class="list-group list-group-flush">
+        {% for a in alertas %}
+        <div class="list-group-item alerta alerta-{{ a.nivel }}">
+            <div class="d-flex gap-3 align-items-start">
+                <i class="fa-solid fa-{{ a.icone }} mt-1"></i>
+                <div class="flex-grow-1">
+                    <div class="fw-semibold">{{ a.titulo }}</div>
+                    {% if a.detalhes %}
+                    <details class="small text-muted">
+                        <summary>Ver detalhes</summary>
+                        <ul class="mb-0 mt-1">{% for d in a.detalhes %}<li>{{ d }}</li>{% endfor %}</ul>
+                    </details>
+                    {% endif %}
+                </div>
+                {% if a.url and a.link %}<a href="{{ a.url }}" class="btn btn-sm btn-outline-secondary flex-shrink-0">{{ a.link }}</a>{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header"><i class="fa-solid fa-route me-2"></i>Viagens em andamento</div>
+    {% if viagens_em_rota %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Veículo</th><th>Motorista</th><th>Unidade</th><th>Destino</th><th>Saída</th><th>KM saída</th><th class="text-end">Ações</th></tr></thead>
+            <tbody>
+            {% for r in viagens_em_rota %}
+            <tr>
+                <td><strong>{{ r.veiculo.modelo }}</strong><br><small class="text-muted">{{ r.veiculo.placa }}</small></td>
+                <td>{{ r.motorista_nome }}</td>
+                <td>{{ r.gabinete_vereador }}</td>
+                <td>{{ r.destino_finalidade or '–' }}</td>
+                <td>{{ r.data_hora_saida|dt }}<br><small class="text-muted">há {{ r.duracao_texto }}</small></td>
+                <td>{{ r.km_saida|km }}</td>
+                <td class="text-end text-nowrap">
+                    <a href="#" class="btn btn-sm btn-outline-secondary" data-foto="{{ url_for('uploaded_file', filename=r.foto_km_saida) }}" data-titulo="Painel na saída"><i class="fa-solid fa-image"></i></a>
+                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#encerrar{{ r.id }}"><i class="fa-solid fa-flag-checkered me-1"></i>Encerrar</button>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        {{ vazio('Nenhum veículo em rota no momento.', 'car-side') }}
+    {% endif %}
+</div>
+
+{% for r in viagens_em_rota %}
+<div class="modal fade" id="encerrar{{ r.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" method="post" action="{{ url_for('encerrar_viagem', id=r.id) }}" enctype="multipart/form-data">
+            {{ csrf() }}
+            <div class="modal-header">
+                <h5 class="modal-title">Encerrar viagem - {{ r.veiculo.modelo }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted">Motorista: <strong>{{ r.motorista_nome }}</strong> · saiu com {{ r.km_saida|km }} km.</p>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">KM DE CHEGADA</label>
+                    <input type="text" name="km_chegada" inputmode="decimal" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">FOTO DO PAINEL <span class="fw-normal">(opcional)</span></label>
+                    <input type="file" name="foto_km_chegada" class="form-control" accept="image/*">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">OBSERVAÇÕES</label>
+                    <textarea name="observacoes" class="form-control" rows="2" maxlength="500"></textarea>
+                </div>
+                <div>
+                    <label class="form-label small fw-semibold text-secondary">FOTOS DE OCORRÊNCIA <span class="fw-normal">(opcional)</span></label>
+                    <input type="file" name="foto_ocorrencia" class="form-control" accept="image/*" multiple>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-danger">Encerrar viagem</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endfor %}
+
+<div class="card shadow-sm border-0">
+    <div class="card-header"><i class="fa-solid fa-car me-2"></i>Situação da frota</div>
+    {% if veiculos %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Veículo</th><th>KM atual</th><th>Próx. revisão</th><th>Situação</th></tr></thead>
+            <tbody>
+            {% for v in veiculos %}
+            <tr>
+                <td><strong>{{ v.modelo }}</strong> <small class="text-muted ms-1">{{ v.placa }}</small></td>
+                <td>{{ v.km_atual|km }}</td>
+                <td>{{ (v.proxima_revisao_km|km ~ ' km') if v.proxima_revisao_km else '–' }}</td>
+                <td>
+                    {% if v.id in ids_em_rota %}<span class="badge text-bg-danger">Em rota</span>
+                    {% elif v.em_manutencao %}<span class="badge text-bg-warning">Em manutenção</span>
+                    {% else %}<span class="badge text-bg-success">Disponível</span>{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        {{ vazio('Nenhum veículo ativo cadastrado.', 'car') }}
+    {% endif %}
+</div>
+{% endblock %}

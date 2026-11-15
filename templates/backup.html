@@ -1,0 +1,56 @@
+{% extends 'base_admin.html' %}
+{% from '_macros.html' import csrf, vazio %}
+{% set pagina = 'backup' %}
+{% block titulo %}Backup{% endblock %}
+
+{% block conteudo %}
+<div class="mb-3">
+    <h1 class="h3 titulo-claro mb-0">Backup</h1>
+    <span class="subtitulo-claro small">O sistema salva uma cópia do banco todos os dias, automaticamente.</span>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-header"><i class="fa-solid fa-database me-2"></i>Fazer backup agora</div>
+            <div class="card-body">
+                <p class="small text-muted mb-3">Banco de dados: <code>{{ banco }}</code><br>Fotos guardadas: <strong>{{ total_fotos }}</strong> arquivo(s).</p>
+                <form method="post" action="{{ url_for('backup_gerar') }}" class="mb-2">
+                    {{ csrf() }}
+                    <button class="btn btn-primary w-100"><i class="fa-solid fa-floppy-disk me-1"></i> Criar cópia no servidor</button>
+                </form>
+                <a href="{{ url_for('backup_baixar', tipo='banco') }}" class="btn btn-outline-secondary w-100 mb-2"><i class="fa-solid fa-download me-1"></i> Baixar só o banco (.db)</a>
+                <a href="{{ url_for('backup_baixar', tipo='completo') }}" class="btn btn-outline-secondary w-100"><i class="fa-solid fa-file-zipper me-1"></i> Baixar backup completo (banco + fotos)</a>
+                <div class="alert alert-warning small border-0 mt-3 mb-0">
+                    Guarde uma cópia fora do computador do servidor (pendrive, nuvem). Backup só no mesmo computador não protege contra defeito do disco.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-header"><i class="fa-solid fa-clock-rotate-left me-2"></i>Cópias guardadas no servidor</div>
+            {% if backups %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead><tr><th>Arquivo</th><th>Data</th><th class="text-end">Tamanho</th><th></th></tr></thead>
+                    <tbody>
+                    {% for b in backups %}
+                    <tr>
+                        <td><code>{{ b.nome }}</code></td>
+                        <td>{{ b.data|dt }}</td>
+                        <td class="text-end">{{ b.tamanho_kb }} KB</td>
+                        <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{{ url_for('backup_baixar', tipo='arquivo', nome=b.nome) }}"><i class="fa-solid fa-download"></i></a></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                {{ vazio('Nenhuma cópia ainda.', 'database') }}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

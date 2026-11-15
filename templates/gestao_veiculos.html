@@ -1,0 +1,94 @@
+{% extends 'base_admin.html' %}
+{% from '_macros.html' import csrf, vazio %}
+{% set pagina = 'veiculos' %}
+{% block titulo %}Veículos{% endblock %}
+
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+    <div>
+        <h1 class="h3 titulo-claro mb-0">Veículos e QR Codes</h1>
+        <span class="subtitulo-claro small">{{ veiculos|length }} veículo(s) cadastrado(s)</span>
+    </div>
+    <a href="{{ url_for('imprimir_qr_todos') }}" class="btn btn-light" target="_blank"><i class="fa-solid fa-print me-1"></i> Imprimir todos os QR Codes</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4 col-xl-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-header"><i class="fa-solid fa-plus me-2"></i>Novo veículo</div>
+            <div class="card-body">
+                <form method="post">
+                    {{ csrf() }}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">MODELO</label>
+                        <input type="text" name="modelo" class="form-control" maxlength="50" required placeholder="Ex: Toyota Corolla">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">PLACA</label>
+                        <input type="text" name="placa" class="form-control text-uppercase" maxlength="8" required placeholder="ABC-1D23">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">KM ATUAL</label>
+                        <input type="text" name="km_atual" inputmode="decimal" class="form-control" placeholder="0">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">PRÓXIMA REVISÃO (KM)</label>
+                        <input type="text" name="proxima_revisao_km" inputmode="decimal" class="form-control" placeholder="Opcional">
+                    </div>
+                    <button class="btn btn-primary w-100"><i class="fa-solid fa-floppy-disk me-1"></i> Cadastrar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8 col-xl-9">
+        <div class="card shadow-sm border-0">
+            <div class="card-header"><i class="fa-solid fa-car me-2"></i>Frota</div>
+            {% if veiculos %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead><tr><th>Veículo</th><th>KM</th><th>Revisão</th><th>Situação</th><th class="text-end">Ações</th></tr></thead>
+                    <tbody>
+                    {% for v in veiculos %}
+                    <tr class="{{ 'linha-inativa' if not v.ativo }}">
+                        <td><strong>{{ v.modelo }}</strong><br><small class="text-muted">{{ v.placa }}</small></td>
+                        <td>{{ v.km_atual|km }}</td>
+                        <td>{{ (v.proxima_revisao_km|km) if v.proxima_revisao_km else '–' }}</td>
+                        <td>
+                            {% if not v.ativo %}<span class="badge text-bg-secondary">Desativado</span>
+                            {% elif v.id in ids_em_rota %}<span class="badge text-bg-danger">Em rota</span>
+                            {% elif v.em_manutencao %}<span class="badge text-bg-warning">Em manutenção</span>
+                            {% else %}<span class="badge text-bg-success">Disponível</span>{% endif %}
+                        </td>
+                        <td class="text-end text-nowrap">
+                            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('imprimir_qr', id=v.id) }}" target="_blank" title="Imprimir QR Code"><i class="fa-solid fa-qrcode"></i></a>
+                            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('veiculo_editar', id=v.id) }}" title="Editar"><i class="fa-solid fa-pen"></i></a>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-label="Mais ações"><i class="fa-solid fa-ellipsis"></i></button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    {% if v.ativo %}
+                                    <li><form method="post" action="{{ url_for('alternar_status_veiculo', veiculo_id=v.id) }}">{{ csrf() }}
+                                        <button class="dropdown-item"><i class="fa-solid fa-screwdriver-wrench me-2"></i>{{ 'Liberar da manutenção' if v.em_manutencao else 'Enviar para manutenção' }}</button></form></li>
+                                    {% endif %}
+                                    <li><form method="post" action="{{ url_for('veiculo_ativo', id=v.id) }}">{{ csrf() }}
+                                        <button class="dropdown-item"><i class="fa-solid fa-power-off me-2"></i>{{ 'Desativar' if v.ativo else 'Reativar' }}</button></form></li>
+                                    <li><form method="post" action="{{ url_for('veiculo_novo_qr', id=v.id) }}" onsubmit="return confirm('Gerar um novo QR Code invalida o adesivo atual. Continuar?')">{{ csrf() }}
+                                        <button class="dropdown-item"><i class="fa-solid fa-rotate me-2"></i>Gerar novo QR Code</button></form></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><form method="post" action="{{ url_for('veiculo_excluir', id=v.id) }}" onsubmit="return confirm('Excluir este veículo? Só é possível se não houver histórico.')">{{ csrf() }}
+                                        <button class="dropdown-item text-danger"><i class="fa-solid fa-trash me-2"></i>Excluir</button></form></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                {{ vazio('Nenhum veículo cadastrado ainda.', 'car') }}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

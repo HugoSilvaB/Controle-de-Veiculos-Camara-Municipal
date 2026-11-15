@@ -1,0 +1,66 @@
+{% extends 'base_admin.html' %}
+{% from '_macros.html' import csrf, vazio %}
+{% set pagina = 'mesa' %}
+{% block titulo %}Mesa Diretora{% endblock %}
+
+{% block conteudo %}
+<div class="mb-3">
+    <h1 class="h3 titulo-claro mb-0">Mesa Diretora</h1>
+    <span class="subtitulo-claro small">Presidente da Câmara em cada ano</span>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header"><i class="fa-solid fa-user-tie me-2"></i>Definir presidente</div>
+            <div class="card-body">
+                <p class="small text-muted">A unidade <strong>Presidência</strong> aparece com o nome do presidente do ano nas telas novas. Viagens antigas não mudam.</p>
+                <form method="post">
+                    {{ csrf() }}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">ANO</label>
+                        <input type="number" name="ano" class="form-control" min="2000" max="2100" value="{{ ano_atual }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">NOME DO PRESIDENTE</label>
+                        <input type="text" name="nome" class="form-control" list="listaVereadores" maxlength="100" required autocomplete="off">
+                        <datalist id="listaVereadores">
+                            {% for v in vereadores %}<option value="{{ v }}">{% endfor %}
+                        </datalist>
+                        <div class="form-text">Se o ano já existir, o nome é substituído.</div>
+                    </div>
+                    <button class="btn btn-primary w-100"><i class="fa-solid fa-floppy-disk me-1"></i> Salvar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header"><i class="fa-solid fa-list me-2"></i>Presidentes por ano</div>
+            {% if presidentes %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead><tr><th>Ano</th><th>Presidente</th><th class="text-end">Ações</th></tr></thead>
+                    <tbody>
+                    {% for p in presidentes %}
+                    <tr>
+                        <td><strong>{{ p.ano }}</strong>{% if p.ano == ano_atual %} <span class="badge badge-ouro">ano atual</span>{% endif %}</td>
+                        <td>{{ p.nome }}</td>
+                        <td class="text-end">
+                            <form method="post" action="{{ url_for('mesa_excluir', id=p.id) }}" class="d-inline" onsubmit="return confirm('Remover o registro de {{ p.ano }}?')">{{ csrf() }}
+                                <button class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                {{ vazio('Nenhum presidente cadastrado.', 'user-tie') }}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
